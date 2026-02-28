@@ -1,0 +1,96 @@
+/* Grundlegende Einstellungen */
+* { box-sizing: border-box; }
+
+:root {
+    --bg-color: #f4f7f6;
+    --sidebar-bg: #ffffff;
+    --text-color: #2c3e50;
+    --input-border: #dcdde1;
+    --input-focus: #3498db;
+    --status-bg: #ebf5fb;
+    --add-btn: #2ecc71;
+}
+
+.dark-mode {
+    --bg-color: #1a1a1a;
+    --sidebar-bg: #2d2d2d;
+    --text-color: #ecf0f1;
+    --input-border: #444444;
+    --status-bg: #3a4b5c;
+}
+
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    margin: 0; display: flex; height: 100vh; 
+    background: var(--bg-color); color: var(--text-color); 
+    transition: background 0.3s; overflow: hidden; 
+}
+
+#sidebar { 
+    width: 360px; min-width: 360px; padding: 20px; 
+    background: var(--sidebar-bg); display: flex; flex-direction: column; 
+    box-shadow: 3px 0 15px rgba(0,0,0,0.1); z-index: 1000; transition: background 0.3s; 
+}
+
+#map { flex-grow: 1; height: 100vh; background: #ddd; }
+
+/* Header & Darkmode Toggle */
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+h2 { color: #3498db; font-size: 1.1rem; margin: 0; border-bottom: 2px solid #3498db; padding-bottom: 5px; flex-grow: 1; }
+
+#dark-mode-toggle { 
+    background: transparent; border: none; font-size: 1.5rem; 
+    cursor: pointer; padding: 0 0 0 10px; line-height: 1; outline: none;
+}
+
+/* Scrollbereich für Adressen */
+#scroll-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; margin-bottom: 15px; padding-right: 5px; }
+
+.input-group { 
+    display: flex; align-items: center; margin-bottom: 10px; gap: 8px; width: 100%; 
+    animation: fadeIn 0.3s ease; 
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Eingabefelder */
+.addr-input { 
+    flex-grow: 1; width: 0; padding: 11px; border: 1px solid var(--input-border); 
+    border-radius: 8px; background: var(--sidebar-bg); color: var(--text-color); 
+    font-size: 13px; outline: none; transition: all 0.2s;
+}
+
+.addr-input:focus { border-color: var(--input-focus); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
+.input-error { border-color: #ff7675 !important; background-color: rgba(255, 118, 117, 0.05) !important; }
+
+/* Löschen Button (X) */
+.remove-btn { 
+    background: transparent; color: #a4b0be; border: none; border-radius: 50%; 
+    width: 28px; min-width: 28px; height: 28px; cursor: pointer; font-size: 16px; 
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.remove-btn:hover { background: #ff7675; color: white; transform: rotate(90deg); }
+
+/* Plus Button */
+#add-field-btn { 
+    background: none; color: var(--add-btn); border: 2px dashed var(--add-btn); 
+    border-radius: 8px; padding: 10px; cursor: pointer; font-weight: bold; 
+    width: 100%; margin-top: 5px; transition: 0.2s; font-size: 0.9rem;
+}
+#add-field-btn:hover { background: rgba(46, 204, 113, 0.1); transform: scale(0.99); }
+
+/* Haupt-Buttons */
+.main-btn { padding: 13px; margin-bottom: 8px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 100%; transition: 0.2s; }
+#btn-plan { background: #3498db; color: white; }
+#btn-plan:hover { background: #2980b9; }
+#btn-clear { background: var(--bg-color); color: #7f8c8d; border: 1px solid var(--input-border); }
+#btn-clear:hover { background: #ff7675; color: white; border-color: #ff7675; }
+
+/* Status Box */
+#status-box { padding: 12px; border-radius: 10px; background: var(--status-bg); color: #3498db; font-size: 0.85rem; min-height: 45px; border-left: 4px solid #3498db; }
+.info-line { font-weight: bold; margin-top: 6px; color: var(--text-color); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 6px; }
+
+/* Marker & Labels auf der Karte */
+.marker-number { background: #3498db; color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; }
+.map-label { background: white; border: 1px solid #3498db; border-radius: 5px; padding: 3px 8px; font-weight: bold; font-size: 11px; color: #333; box-shadow: 2px 2px 8px rgba(0,0,0,0.15); }
+.dark-mode .leaflet-tile-container { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }

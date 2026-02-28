@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pressevertrieb Riedel KG AD Routenplaner</title>
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="body">
+
+<div id="sidebar">
+    <div class="header-row">
+        <h2>Pressevertrieb Riedel KG<br>AD Routenplaner</h2>
+        <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Darkmode umschalten">🌙</button>
+    </div>
+    
+    <div id="scroll-area">
+        <div id="address-container">
+            </div>
+        <button id="add-field-btn" onclick="addInputField()">+ Adresse hinzufügen</button>
+    </div>
+
+    <button id="btn-plan" class="main-btn" onclick="planRoute()">Route optimieren</button>
+    <button id="btn-clear" class="main-btn" onclick="clearAll()">Tour löschen</button>
+    
+    <div id="status-box">
+        <div id="status-text">Bereit</div>
+        <div id="time-info" class="info-line" style="display: none;"></div>
+    </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
