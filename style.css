@@ -1,4 +1,3 @@
-/* Grundlegende Einstellungen */
 * { box-sizing: border-box; }
 
 :root {
@@ -9,88 +8,87 @@
     --input-focus: #3498db;
     --status-bg: #ebf5fb;
     --add-btn: #2ecc71;
+    --shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
 .dark-mode {
-    --bg-color: #1a1a1a;
-    --sidebar-bg: #2d2d2d;
+    --bg-color: #121212;
+    --sidebar-bg: #1e1e1e;
     --text-color: #ecf0f1;
-    --input-border: #444444;
-    --status-bg: #3a4b5c;
+    --input-border: #333;
+    --status-bg: #2c3e50;
+    --shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
 body { 
     font-family: 'Segoe UI', sans-serif; 
     margin: 0; display: flex; height: 100vh; 
     background: var(--bg-color); color: var(--text-color); 
-    transition: background 0.3s; overflow: hidden; 
+    transition: background 0.4s ease; overflow: hidden; 
 }
 
 #sidebar { 
-    width: 360px; min-width: 360px; padding: 20px; 
+    width: 360px; min-width: 360px; padding: 25px; 
     background: var(--sidebar-bg); display: flex; flex-direction: column; 
-    box-shadow: 3px 0 15px rgba(0,0,0,0.1); z-index: 1000; transition: background 0.3s; 
+    box-shadow: var(--shadow); z-index: 1000; position: relative; 
 }
 
 #map { flex-grow: 1; height: 100vh; background: #ddd; }
 
-/* Header & Darkmode Toggle */
-.header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-h2 { color: #3498db; font-size: 1.1rem; margin: 0; border-bottom: 2px solid #3498db; padding-bottom: 5px; flex-grow: 1; }
-
+/* FIX: Darkmode Schalter oben rechts positioniert */
 #dark-mode-toggle { 
-    background: transparent; border: none; font-size: 1.5rem; 
-    cursor: pointer; padding: 0 0 0 10px; line-height: 1; outline: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: transparent; 
+    border: none; 
+    font-size: 1.5rem; 
+    cursor: pointer; 
+    outline: none;
+    transition: transform 0.3s ease;
+    padding: 0;
+    z-index: 10;
 }
+#dark-mode-toggle:hover { transform: scale(1.2) rotate(15deg); }
 
-/* Scrollbereich für Adressen */
-#scroll-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; margin-bottom: 15px; padding-right: 5px; }
+.header-row { margin-bottom: 25px; padding-right: 40px; }
+h2 { color: #3498db; font-size: 1.2rem; margin: 0; line-height: 1.3; }
 
-.input-group { 
-    display: flex; align-items: center; margin-bottom: 10px; gap: 8px; width: 100%; 
-    animation: fadeIn 0.3s ease; 
-}
+#scroll-area { flex-grow: 1; overflow-y: auto; overflow-x: hidden; margin-bottom: 15px; padding-right: 8px; }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+/* Animationen & Felder */
+.input-group { display: flex; align-items: center; margin-bottom: 12px; gap: 10px; width: 100%; animation: slideIn 0.4s ease; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Eingabefelder */
+.fall-die-away { animation: exitRight 0.4s forwards; }
+@keyframes exitRight { to { opacity: 0; transform: translateX(100px); } }
+
+.fall-down-out { animation: exitDown 0.5s forwards; }
+@keyframes exitDown { to { opacity: 0; transform: translateY(50px); } }
+
 .addr-input { 
-    flex-grow: 1; width: 0; padding: 11px; border: 1px solid var(--input-border); 
-    border-radius: 8px; background: var(--sidebar-bg); color: var(--text-color); 
-    font-size: 13px; outline: none; transition: all 0.2s;
+    flex-grow: 1; width: 0; padding: 12px; border: 2px solid var(--input-border); 
+    border-radius: 10px; background: var(--sidebar-bg); color: var(--text-color); 
+    font-size: 14px; outline: none; transition: 0.2s;
 }
+.addr-input:focus { border-color: var(--input-focus); transform: translateX(3px); }
 
-.addr-input:focus { border-color: var(--input-focus); box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); }
-.input-error { border-color: #ff7675 !important; background-color: rgba(255, 118, 117, 0.05) !important; }
+.remove-btn { background: transparent; color: #a4b0be; border: none; cursor: pointer; font-size: 16px; transition: 0.3s; width: 30px; }
+.remove-btn:hover { color: #ff7675; transform: rotate(90deg); }
 
-/* Löschen Button (X) */
-.remove-btn { 
-    background: transparent; color: #a4b0be; border: none; border-radius: 50%; 
-    width: 28px; min-width: 28px; height: 28px; cursor: pointer; font-size: 16px; 
-    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-}
-.remove-btn:hover { background: #ff7675; color: white; transform: rotate(90deg); }
-
-/* Plus Button */
 #add-field-btn { 
-    background: none; color: var(--add-btn); border: 2px dashed var(--add-btn); 
-    border-radius: 8px; padding: 10px; cursor: pointer; font-weight: bold; 
-    width: 100%; margin-top: 5px; transition: 0.2s; font-size: 0.9rem;
+    background: transparent; color: var(--add-btn); border: 2px dashed var(--add-btn); 
+    padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
 }
-#add-field-btn:hover { background: rgba(46, 204, 113, 0.1); transform: scale(0.99); }
+#add-field-btn:hover { background: var(--add-btn); color: white; }
 
-/* Haupt-Buttons */
-.main-btn { padding: 13px; margin-bottom: 8px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; width: 100%; transition: 0.2s; }
-#btn-plan { background: #3498db; color: white; }
-#btn-plan:hover { background: #2980b9; }
-#btn-clear { background: var(--bg-color); color: #7f8c8d; border: 1px solid var(--input-border); }
-#btn-clear:hover { background: #ff7675; color: white; border-color: #ff7675; }
+.main-btn { padding: 14px; margin-bottom: 10px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+#btn-plan { background: #3498db; color: white; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3); }
+#btn-clear { background: transparent; color: #7f8c8d; border: 1px solid var(--input-border); }
 
-/* Status Box */
-#status-box { padding: 12px; border-radius: 10px; background: var(--status-bg); color: #3498db; font-size: 0.85rem; min-height: 45px; border-left: 4px solid #3498db; }
-.info-line { font-weight: bold; margin-top: 6px; color: var(--text-color); border-top: 1px solid rgba(0,0,0,0.1); padding-top: 6px; }
+#status-box { padding: 15px; border-radius: 15px; background: var(--status-bg); color: var(--input-focus); border-left: 5px solid var(--input-focus); }
+.info-line { font-weight: bold; margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px; }
 
-/* Marker & Labels auf der Karte */
 .marker-number { background: #3498db; color: white; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border: 2px solid white; font-weight: bold; }
-.map-label { background: white; border: 1px solid #3498db; border-radius: 5px; padding: 3px 8px; font-weight: bold; font-size: 11px; color: #333; box-shadow: 2px 2px 8px rgba(0,0,0,0.15); }
+.map-label { background: white; border: 1px solid #3498db; border-radius: 5px; padding: 3px 8px; font-weight: bold; font-size: 11px; color: #333; }
 .dark-mode .leaflet-tile-container { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
