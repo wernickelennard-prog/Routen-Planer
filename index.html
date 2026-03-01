@@ -11,22 +11,25 @@
 <body id="body">
 
 <div id="sidebar">
+    <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Modus wechseln">🌙</button>
+
     <div class="header-row">
         <h2>Pressevertrieb Riedel KG<br>AD Routenplaner</h2>
-        <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Darkmode umschalten">🌙</button>
     </div>
-    
+
     <div id="scroll-area">
-        <div id="address-container">
-            </div>
+        <div id="address-container"></div>
         <button id="add-field-btn" onclick="addInputField()">+ Adresse hinzufügen</button>
     </div>
 
     <button id="btn-plan" class="main-btn" onclick="planRoute()">Route optimieren</button>
     <button id="btn-clear" class="main-btn" onclick="clearAll()">Tour löschen</button>
-    
+
     <div id="status-box">
         <div id="status-text">Bereit</div>
+        <div id="progress-bar-container" style="display: none; width: 100%; height: 4px; background: rgba(0,0,0,0.1); border-radius: 2px; margin-top: 8px; overflow: hidden;">
+            <div id="progress-bar" style="width: 0%; height: 100%; background: #3498db; transition: width 0.3s;"></div>
+        </div>
         <div id="time-info" class="info-line" style="display: none;"></div>
     </div>
 </div>
