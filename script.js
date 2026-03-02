@@ -8,7 +8,6 @@ let routeLines = [];
 const container = document.getElementById('address-container');
 const scrollArea = document.getElementById('scroll-area');
 
-// App beim Laden initialisieren
 function init() {
     addInputField();
     addInputField();
@@ -19,35 +18,29 @@ function init() {
     }
 }
 
-// Neues Adressfeld mit Animation hinzufügen
 function addInputField() {
     const currentFields = container.getElementsByClassName('input-group').length;
     if (currentFields >= 20) return alert("Maximal 20 Adressen möglich.");
-    
     const div = document.createElement('div');
     div.className = 'input-group';
     div.innerHTML = `
         <input type="text" class="addr-input" placeholder="Adresse ${currentFields + 1}" oninput="this.classList.remove('input-error')">
-        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)" title="Löschen">✕</button>` : '<div style="width:30px"></div>'}
+        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)">✕</button>` : '<div style="width:30px"></div>'}
     `;
     container.appendChild(div);
     scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
 }
 
-// Einzelnes Feld mit Animation entfernen
 function animateRemove(button) {
     const row = button.parentElement;
     row.classList.add('fall-die-away');
     setTimeout(() => {
         row.remove();
         const inputs = document.querySelectorAll('.addr-input');
-        inputs.forEach((input, index) => { 
-            input.placeholder = `Adresse ${index + 1}`; 
-        });
+        inputs.forEach((input, index) => { input.placeholder = `Adresse ${index + 1}`; });
     }, 400);
 }
 
-// Darkmode umschalten
 function toggleDarkMode() {
     const body = document.getElementById('body');
     const btn = document.getElementById('dark-mode-toggle');
@@ -56,14 +49,18 @@ function toggleDarkMode() {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
-// Zeit korrekt formatieren (Stunden und Minuten)
+// DIESE FUNKTION MUSS EXAKT SO AUSSEHEN
 function formatTime(seconds) {
     const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    return h > 0 ? h + " Std. " + m + " Min." : m + " Min.";
+    const m = Math.round((seconds % 3600) / 60);
+    
+    if (h > 0) {
+        return h + " Std. " + m + " Min.";
+    } else {
+        return m + " Min.";
+    }
 }
 
-// Hauptfunktion zur Routenplanung
 async function planRoute() {
     const inputElements = Array.from(document.getElementsByClassName('addr-input'));
     const statusText = document.getElementById('status-text');
@@ -88,11 +85,9 @@ async function planRoute() {
         let addr = inputElements[i].value.trim();
         if (!addr) continue;
         try {
-            // Pause für Nominatim API (Max 1 Request pro Sekunde)
             await new Promise(r => setTimeout(r, 1100));
             const resp = await fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(addr) + "&countrycodes=de&limit=1");
             const data = await resp.json();
-            
             if (data.length > 0) {
                 coords.push({ latLng: [parseFloat(data[0].lat), parseFloat(data[0].lon)], name: addr });
                 progBar.style.width = ((i + 1) / inputElements.length * 80) + "%";
@@ -102,19 +97,12 @@ async function planRoute() {
                 progBarCont.style.display = "none";
                 return;
             }
-        } catch (e) { 
-            statusText.innerText = "⚠️ Netzwerkfehler."; 
-            progBarCont.style.display = "none";
-            return; 
-        }
+        } catch (e) { statusText.innerText = "⚠️ Fehler."; return; }
     }
 
-    // Start (Feld 1) und Ende (letztes Feld) festlegen
     let start = coords.shift();
     let end = (coords.length > 0) ? coords.pop() : null;
     let optimized = [start];
-
-    // Einfache Optimierung der Zwischenstopps (Nächster-Nachbar)
     while (coords.length > 0) {
         let last = optimized[optimized.length - 1];
         coords.sort((a, b) => L.latLng(last.latLng).distanceTo(L.latLng(a.latLng)) - L.latLng(last.latLng).distanceTo(L.latLng(b.latLng)));
@@ -127,35 +115,21 @@ async function planRoute() {
         const rResp = await fetch("https://router.project-osrm.org/route/v1/driving/" + osrmCoords + "?overview=full&geometries=geojson");
         const rData = await rResp.json();
         if (rData.code === 'Ok') {
-            const line = L.geoJSON(rData.routes[0].geometry, { 
-                style: { color: '#3498db', weight: 6, opacity: 0.8 } 
-            }).addTo(map);
+            const line = L.geoJSON(rData.routes[0].geometry, { style: { color: '#3498db', weight: 6, opacity: 0.8 } }).addTo(map);
             routeLines.push(line);
             
-            const totalSeconds = rData.routes[0].duration;
-            const totalKm = (rData.routes[0].distance / 1000).toFixed(1);
+            // HIER WIRD DIE FUNKTION AUFGERUFEN
+            const durationInSeconds = rData.routes[0].duration;
+            const distanceInKm = (rData.routes[0].distance / 1000).toFixed(1);
             
-            timeInfo.innerHTML = "⏱️ Fahrzeit: " + formatTime(totalSeconds) + "<br>📏 Strecke: " + totalKm + " km";
+            timeInfo.innerHTML = "⏱️ Fahrzeit: " + formatTime(durationInSeconds) + "<br>📏 Strecke: " + distanceInKm + " km";
             timeInfo.style.display = "block";
         }
     } catch (e) { console.error(e); }
 
-    // Marker auf der Karte platzieren
     optimized.forEach((c, i) => {
-        const icon = L.divIcon({ 
-            html: '<div class="marker-number">' + (i+1) + '</div>', 
-            className: '', 
-            iconSize: [26, 26], 
-            iconAnchor: [13, 13] 
-        });
-        const m = L.marker(c.latLng, { icon: icon }).addTo(map)
-            .bindTooltip("<b>" + (i+1) + ":</b> " + c.name, { 
-                permanent: true, 
-                direction: 'right', 
-                className: 'map-label', 
-                offset: [15, 0] 
-            });
-        markers.push(m);
+        const icon = L.divIcon({ html: '<div class="marker-number">' + (i+1) + '</div>', className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+        markers.push(L.marker(c.latLng, { icon: icon }).addTo(map).bindTooltip(c.name, { permanent: true, direction: 'right', className: 'map-label' }));
     });
 
     map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
@@ -164,27 +138,18 @@ async function planRoute() {
     setTimeout(() => progBarCont.style.display = "none", 500);
 }
 
-// Gesamte Tour mit Kaskaden-Animation löschen
 function clearAll() {
     const rows = Array.from(container.getElementsByClassName('input-group'));
-    rows.forEach((row, index) => { 
-        setTimeout(() => { 
-            row.classList.add('fall-down-out'); 
-        }, index * 50); 
-    });
-
+    rows.forEach((row, index) => { setTimeout(() => { row.classList.add('fall-down-out'); }, index * 50); });
     setTimeout(() => {
         container.innerHTML = "";
-        init(); // Startzustand mit 2 Feldern wiederherstellen
-        
+        init();
         markers.forEach(m => map.removeLayer(m));
         routeLines.forEach(l => map.removeLayer(l));
-        markers = []; 
-        routeLines = [];
-        
+        markers = []; routeLines = [];
         document.getElementById('status-text').innerText = "Bereit";
         document.getElementById('time-info').style.display = "none";
-    }, (rows.length * 50) + 550);
+    }, 600);
 }
 
 init();
