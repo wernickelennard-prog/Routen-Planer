@@ -9,7 +9,7 @@
     --input-focus: #3498db;
     --status-bg: #ebf5fb;
     --add-btn: #2ecc71;
-    --danger: #ff4757; /* Ein schöneres Rot */
+    --danger: #ff4757;
     --shadow: 0 4px 15px rgba(0,0,0,0.08);
 }
 
@@ -19,6 +19,7 @@
     --text-color: #ecf0f1;
     --input-border: #333;
     --status-bg: #1a2634;
+    --shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
 
 body { 
@@ -36,6 +37,7 @@ body {
 
 #map { flex-grow: 1; height: 100vh; background: #ddd; }
 
+/* DARKMODE SWITCH */
 #dark-mode-toggle { 
     position: absolute; top: 25px; right: 25px; 
     background: transparent; border: none; font-size: 1.2rem; 
@@ -68,19 +70,14 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 }
 .addr-input { flex-grow: 1; border: none; background: transparent; color: var(--text-color); padding: 10px 0; font-size: 14px; outline: none; }
 
-/* REMOVE BUTTON - JETZT ROT BEIM HOVERN */
+/* REMOVE BUTTON - ROT BEIM HOVERN */
 .remove-btn { 
-    color: #a4b0be; 
-    background: none; 
-    border: none; 
-    cursor: pointer; 
-    transition: all 0.2s ease-in-out; 
-    padding: 5px;
+    color: #a4b0be; background: none; border: none; 
+    cursor: pointer; transition: all 0.2s ease; padding: 5px;
 }
 .remove-btn:hover { 
     color: var(--danger) !important; 
     transform: rotate(90deg) scale(1.2);
-    text-shadow: 0 0 8px rgba(255, 71, 87, 0.3);
 }
 
 /* BUTTONS */
@@ -112,39 +109,18 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 
 .details-content { margin-top: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 15px; }
 
-/* DETAIL STEPS - KORRIGIERTE ICON-POSITION */
-.detail-step {
-    position: relative;
-    padding-left: 35px;
-    margin-bottom: 25px;
-    margin-left: 5px;
-}
-
+/* DETAIL STEPS - ICON FIX */
+.detail-step { position: relative; padding-left: 35px; margin-bottom: 25px; margin-left: 5px; }
 .detail-step::before {
-    content: '';
-    position: absolute;
-    left: 8px;
-    top: 22px;
-    bottom: -22px;
-    width: 2px;
-    background: repeating-linear-gradient(to bottom, var(--input-focus), var(--input-focus) 4px, transparent 4px, transparent 8px);
-    opacity: 0.4;
+    content: ''; position: absolute; left: 8px; top: 22px; bottom: -22px; width: 2px;
+    background: repeating-linear-gradient(to bottom, var(--input-focus), var(--input-focus) 4px, transparent 4px, transparent 8px); opacity: 0.4;
 }
 .detail-step:last-child::before { display: none; }
 
 .detail-step i.main-icon { 
-    position: absolute; 
-    left: 0; 
-    top: 2px; /* Leicht nach unten korrigiert für bessere Zentrierung zum Text */
-    width: 18px;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--input-focus); 
-    font-size: 1rem;
-    background: var(--status-bg); 
-    z-index: 2;
+    position: absolute; left: 0; top: 2px; width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--input-focus); font-size: 1rem; background: var(--status-bg); z-index: 2;
 }
 
 .step-addr { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--input-focus); }
@@ -158,3 +134,4 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 
 .marker-number { background: #3498db; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 3px solid white; font-weight: bold; }
 .map-label { background: white; border: 2px solid #3498db; border-radius: 6px; padding: 4px 8px; font-weight: bold; color: #333; }
+.dark-mode .leaflet-tile-container { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
