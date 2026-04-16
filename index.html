@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riedel KG Routenplaner</title>
-    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/854/854878.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/785/785116.png">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -15,7 +15,9 @@
 <body id="body">
 
 <div id="sidebar">
-    <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Modus wechseln"><i class="fas fa-moon"></i></button>
+    <button id="dark-mode-toggle" onclick="toggleDarkMode()" title="Modus wechseln">
+        <i class="fas fa-moon"></i>
+    </button>
 
     <div class="header-row">
         <h2>Pressevertrieb Riedel KG<br>AD Routenplaner</h2>
@@ -28,12 +30,14 @@
         </button>
     </div>
 
-    <button id="btn-plan" class="main-btn" onclick="planRoute()">
-        <i class="fas fa-route"></i> Route optimieren
-    </button>
-    <button id="btn-clear" class="main-btn" onclick="clearAll()">
-        <i class="fas fa-trash-can"></i> Tour löschen
-    </button>
+    <div class="action-buttons">
+        <button id="btn-plan" class="main-btn btn-glow" onclick="planRoute()">
+            <i class="fas fa-route"></i> Route optimieren
+        </button>
+        <button id="btn-clear" class="main-btn" onclick="clearAll()">
+            <i class="fas fa-trash-can"></i> Tour löschen
+        </button>
+    </div>
 
     <div id="status-box">
         <div id="status-header">
@@ -42,7 +46,15 @@
         <div id="progress-bar-container" style="display: none;">
             <div id="progress-bar"></div>
         </div>
-        <div id="time-info" class="info-line" style="display: none;"></div>
+        
+        <div id="route-summary" class="info-line" style="display: none;">
+            <div id="time-info"></div>
+            <button id="btn-details" class="details-toggle" onclick="toggleDetails()">
+                <i class="fas fa-chevron-down"></i> Details anzeigen
+            </button>
+        </div>
+        
+        <div id="route-details" class="details-content" style="display: none;"></div>
     </div>
 </div>
 
