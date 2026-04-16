@@ -14,7 +14,7 @@ function init() {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark') {
         document.getElementById('body').classList.add('dark-mode');
-        document.getElementById('dark-mode-toggle').innerText = '☀️';
+        document.getElementById('dark-mode-toggle').innerHTML = '<i class="fas fa-sun"></i>';
     }
 }
 
@@ -24,8 +24,9 @@ function addInputField() {
     const div = document.createElement('div');
     div.className = 'input-group';
     div.innerHTML = `
+        <i class="fas fa-location-dot" style="color: #3498db; font-size: 0.9rem;"></i>
         <input type="text" class="addr-input" placeholder="Adresse ${currentFields + 1}" oninput="this.classList.remove('input-error')">
-        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)">✕</button>` : '<div style="width:30px"></div>'}
+        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)"><i class="fas fa-circle-xmark"></i></button>` : '<div style="width:1.1rem"></div>'}
     `;
     container.appendChild(div);
     scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
@@ -38,27 +39,22 @@ function animateRemove(button) {
         row.remove();
         const inputs = document.querySelectorAll('.addr-input');
         inputs.forEach((input, index) => { input.placeholder = `Adresse ${index + 1}`; });
-    }, 400);
+    }, 500);
 }
 
 function toggleDarkMode() {
     const body = document.getElementById('body');
     const btn = document.getElementById('dark-mode-toggle');
     const isDark = body.classList.toggle('dark-mode');
-    btn.innerText = isDark ? '☀️' : '🌙';
+    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
 }
 
-// DIESE FUNKTION MUSS EXAKT SO AUSSEHEN
 function formatTime(seconds) {
     const h = Math.floor(seconds / 3600);
     const m = Math.round((seconds % 3600) / 60);
-    
-    if (h > 0) {
-        return h + " Std. " + m + " Min.";
-    } else {
-        return m + " Min.";
-    }
+    if (h > 0) return h + " Std. " + m + " Min.";
+    return m + " Min.";
 }
 
 async function planRoute() {
@@ -72,7 +68,7 @@ async function planRoute() {
     const validInputs = inputElements.filter(i => i.value.trim() !== "");
     if (validInputs.length < 2) return alert("Bitte mindestens 2 Adressen ausfüllen!");
     
-    statusText.innerText = "⏳ Suche Standorte...";
+    statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Berechne Route...';
     progBarCont.style.display = "block";
     progBar.style.width = "10%";
     
@@ -93,11 +89,11 @@ async function planRoute() {
                 progBar.style.width = ((i + 1) / inputElements.length * 80) + "%";
             } else {
                 inputElements[i].classList.add('input-error');
-                statusText.innerText = "❌ Nicht gefunden: " + addr;
+                statusText.innerText = "Nicht gefunden: " + addr;
                 progBarCont.style.display = "none";
                 return;
             }
-        } catch (e) { statusText.innerText = "⚠️ Fehler."; return; }
+        } catch (e) { statusText.innerText = "Fehler bei der Suche."; return; }
     }
 
     let start = coords.shift();
@@ -117,12 +113,9 @@ async function planRoute() {
         if (rData.code === 'Ok') {
             const line = L.geoJSON(rData.routes[0].geometry, { style: { color: '#3498db', weight: 6, opacity: 0.8 } }).addTo(map);
             routeLines.push(line);
-            
-            // HIER WIRD DIE FUNKTION AUFGERUFEN
             const durationInSeconds = rData.routes[0].duration;
             const distanceInKm = (rData.routes[0].distance / 1000).toFixed(1);
-            
-            timeInfo.innerHTML = "⏱️ Fahrzeit: " + formatTime(durationInSeconds) + "<br>📏 Strecke: " + distanceInKm + " km";
+            timeInfo.innerHTML = "<i class='fas fa-clock'></i> Fahrzeit: " + formatTime(durationInSeconds) + "<br><i class='fas fa-road'></i> Strecke: " + distanceInKm + " km";
             timeInfo.style.display = "block";
         }
     } catch (e) { console.error(e); }
@@ -133,7 +126,7 @@ async function planRoute() {
     });
 
     map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
-    statusText.innerText = "✅ Route fertig!";
+    statusText.innerHTML = '<i class="fas fa-check-circle"></i> Tour geplant!';
     progBar.style.width = "100%";
     setTimeout(() => progBarCont.style.display = "none", 500);
 }
