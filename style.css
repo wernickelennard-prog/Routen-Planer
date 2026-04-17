@@ -37,7 +37,6 @@ body {
 
 #map { flex-grow: 1; height: 100vh; background: #ddd; }
 
-/* DARKMODE SWITCH */
 #dark-mode-toggle { 
     position: absolute; top: 25px; right: 25px; 
     background: transparent; border: none; font-size: 1.2rem; 
@@ -54,31 +53,32 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 #scroll-area::-webkit-scrollbar { width: 6px; }
 #scroll-area::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
 
-/* INPUT GROUP */
+/* DRAGGABLE INPUT GROUP */
 .input-group { 
     display: flex; align-items: center; margin-bottom: 12px; gap: 10px; 
     background: var(--sidebar-bg); padding: 5px 12px; border-radius: 10px;
     border: 1px solid var(--input-border);
     transition: all 0.3s ease;
     animation: slideIn 0.4s ease forwards;
+    cursor: grab; /* Zeigt, dass man schieben kann */
 }
-.input-group i { color: var(--input-focus); font-size: 0.9rem; }
+
+.input-group:active { cursor: grabbing; }
+.input-group.dragging { opacity: 0.5; border: 2px dashed var(--input-focus); background: var(--status-bg); }
+
+.input-group i.drag-handle { color: var(--text-muted); cursor: grab; font-size: 0.8rem; }
+.input-group i.fa-location-dot { color: var(--input-focus); font-size: 0.9rem; }
+
 .input-group:focus-within { 
     border-color: var(--input-focus); 
     box-shadow: 0 0 12px rgba(52, 152, 219, 0.25);
     transform: translateX(4px);
 }
+
 .addr-input { flex-grow: 1; border: none; background: transparent; color: var(--text-color); padding: 10px 0; font-size: 14px; outline: none; }
 
-/* REMOVE BUTTON - ROT BEIM HOVERN */
-.remove-btn { 
-    color: #a4b0be; background: none; border: none; 
-    cursor: pointer; transition: all 0.2s ease; padding: 5px;
-}
-.remove-btn:hover { 
-    color: var(--danger) !important; 
-    transform: rotate(90deg) scale(1.2);
-}
+.remove-btn { color: #a4b0be; background: none; border: none; cursor: pointer; transition: all 0.2s ease; padding: 5px; }
+.remove-btn:hover { color: var(--danger) !important; transform: rotate(90deg) scale(1.2); }
 
 /* BUTTONS */
 .main-btn { padding: 14px; margin-bottom: 10px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -87,10 +87,7 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 #btn-clear { background: transparent; color: #7f8c8d; border: 1px solid var(--input-border); }
 #btn-clear:hover { border-color: var(--danger); color: var(--danger); }
 
-#add-field-btn { 
-    background: transparent; color: var(--add-btn); border: 2px dashed var(--add-btn); 
-    padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s;
-}
+#add-field-btn { background: transparent; color: var(--add-btn); border: 2px dashed var(--add-btn); padding: 12px; border-radius: 10px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
 #add-field-btn:hover { background: var(--add-btn); color: white; }
 
 /* STATUS & DETAILS */
@@ -100,28 +97,15 @@ h2 { color: #3498db; font-size: 1.2rem; margin: 0; font-weight: 700; }
 #progress-bar { height: 100%; background: #3498db; transition: width 0.3s; }
 .info-line { border-top: 1px solid rgba(0,0,0,0.05); margin-top: 10px; padding-top: 10px; }
 
-.details-toggle {
-    width: 100%; background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.2);
-    color: var(--input-focus); padding: 8px; border-radius: 8px;
-    margin-top: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s;
-}
+.details-toggle { width: 100%; background: rgba(52, 152, 219, 0.1); border: 1px solid rgba(52, 152, 219, 0.2); color: var(--input-focus); padding: 8px; border-radius: 8px; margin-top: 10px; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: 0.3s; }
 .details-toggle:hover { background: rgba(52, 152, 219, 0.3); box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); }
 
 .details-content { margin-top: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 15px; }
 
-/* DETAIL STEPS - ICON FIX */
 .detail-step { position: relative; padding-left: 35px; margin-bottom: 25px; margin-left: 5px; }
-.detail-step::before {
-    content: ''; position: absolute; left: 8px; top: 22px; bottom: -22px; width: 2px;
-    background: repeating-linear-gradient(to bottom, var(--input-focus), var(--input-focus) 4px, transparent 4px, transparent 8px); opacity: 0.4;
-}
+.detail-step::before { content: ''; position: absolute; left: 8px; top: 22px; bottom: -22px; width: 2px; background: repeating-linear-gradient(to bottom, var(--input-focus), var(--input-focus) 4px, transparent 4px, transparent 8px); opacity: 0.4; }
 .detail-step:last-child::before { display: none; }
-
-.detail-step i.main-icon { 
-    position: absolute; left: 0; top: 2px; width: 18px; height: 18px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--input-focus); font-size: 1rem; background: var(--status-bg); z-index: 2;
-}
+.detail-step i.main-icon { position: absolute; left: 0; top: 2px; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; color: var(--input-focus); font-size: 1rem; background: var(--status-bg); z-index: 2; }
 
 .step-addr { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; color: var(--input-focus); }
 .step-info { display: block; color: var(--text-muted); font-size: 0.75rem; font-weight: 500; }
