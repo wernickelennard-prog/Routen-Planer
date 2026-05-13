@@ -1,3 +1,4 @@
+// Globale Variablen & Initialisierung
 const map = L.map('map').setView([51.1657, 10.4515], 6);
 L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', { 
     attribution: '© OpenStreetMap' 
@@ -5,8 +6,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.de/tiles/osmde/{z}/{x}/{y}.png', {
 
 let markers = [];
 let routeLines = [];
+const geoCache = new Map(); // Cache für Adress-Koordinaten
 const container = document.getElementById('address-container');
-const scrollArea = document.getElementById('scroll-area');
 
 function init() {
     addInputField();
@@ -18,18 +19,17 @@ function init() {
     }
 }
 
-// DRAG & DROP LOGIK MIT AUTO-UPDATE
+// DRAG & DROP LOGIK
 function setupDragAndDrop(el) {
     el.addEventListener('dragstart', () => el.classList.add('dragging'));
     el.addEventListener('dragend', () => {
         el.classList.remove('dragging');
         updatePlaceholders();
         
-        // AUTO-UPDATE: Wenn schon eine Route da war, berechne sie sofort neu
+        // Auto-Update ohne Neu-Optimierung beim Verschieben
         const validInputs = Array.from(document.querySelectorAll('.addr-input')).filter(i => i.value.trim() !== "");
         if (validInputs.length >= 2) {
-            console.log("Reihenfolge geändert - berechne neu...");
-            planRoute(false); // false = nicht neu optimieren, sondern händische Folge nehmen
+            planRoute(false); 
         }
     });
 }
@@ -58,76 +58,52 @@ function getDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-function updatePlaceholders() {
-    const inputs = document.querySelectorAll('.addr-input');
-    inputs.forEach((input, index) => {
-        input.placeholder = `Adresse ${index + 1}`;
-    });
+// ADRESS-GEOCACHING (Verhindert API-Spam)
+async function getCoordinates(address) {
+    if (!address) return null;
+    if (geoCache.has(address)) return geoCache.get(address);
+
+    try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=de&limit=1`);
+        const data = await resp.json();
+        if (data.length > 0) {
+            const result = { latLng: [parseFloat(data[0].lat), parseFloat(data[0].lon)], name: address };
+            geoCache.set(address, result);
+            return result;
+        }
+    } catch (e) { console.error("Geocoding Fehler"); }
+    return null;
 }
 
-function addInputField() {
-    const currentFields = container.getElementsByClassName('input-group').length;
-    if (currentFields >= 20) return alert("Maximal 20 Adressen möglich.");
-    
-    const div = document.createElement('div');
-    div.className = 'input-group';
-    div.draggable = true;
-    div.innerHTML = `
-        <i class="fas fa-grip-vertical drag-handle"></i>
-        <i class="fas fa-location-dot"></i>
-        <input type="text" class="addr-input" placeholder="Adresse ${currentFields + 1}" oninput="this.classList.remove('input-error')">
-        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)" title="Löschen"><i class="fas fa-circle-xmark"></i></button>` : '<div style="width:1.1rem"></div>'}
-    `;
-    
-    setupDragAndDrop(div);
-    container.appendChild(div);
-}
-
-function animateRemove(button) {
-    const row = button.parentElement;
-    row.classList.add('fall-die-away');
-    setTimeout(() => {
-        row.remove();
-        updatePlaceholders();
-        planRoute(false); // Auch beim Löschen auto-update
-    }, 500);
-}
-
+// HAUPTFUNKTION: ROUTE PLANEN
 async function planRoute(autoOptimize = true) {
     const inputElements = Array.from(document.getElementsByClassName('addr-input'));
     const statusText = document.getElementById('status-text');
-    const summary = document.getElementById('route-summary');
-    const timeInfo = document.getElementById('time-info');
     const progBarCont = document.getElementById('progress-bar-container');
     const progBar = document.getElementById('progress-bar');
-    const detailsCont = document.getElementById('route-details');
 
-    const validInputs = inputElements.filter(i => i.value.trim() !== "");
-    if (validInputs.length < 2) return;
-    
-    statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aktualisiere Tour...';
+    const validAddresses = inputElements.map(i => i.value.trim()).filter(a => a !== "");
+    if (validAddresses.length < 2) return;
+
+    statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Tour wird berechnet...';
     progBarCont.style.display = "block";
     progBar.style.width = "30%";
 
-    // Wir speichern Geocoding-Ergebnisse zwischen, um die API nicht zu spammen
+    // Koordinaten laden (aus Cache oder API)
     let coords = [];
-    for (let i = 0; i < inputElements.length; i++) {
-        let addr = inputElements[i].value.trim();
-        if (!addr) continue;
-        try {
-            // Ein kleiner Cache oder schnellere Abfrage
-            const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&countrycodes=de&limit=1`);
-            const data = await resp.json();
-            if (data.length > 0) {
-                coords.push({ latLng: [parseFloat(data[0].lat), parseFloat(data[0].lon)], name: addr });
-            }
-        } catch (e) { console.error("Geocoding Fehler"); }
+    for (const addr of validAddresses) {
+        const res = await getCoordinates(addr);
+        if (res) coords.push(res);
     }
 
-    // Die Reihenfolge aus den Input-Feldern übernehmen
+    if (coords.length < 2) {
+        statusText.innerText = "Fehler: Adressen nicht gefunden.";
+        return;
+    }
+
     let routeToDraw = [...coords];
 
-    // Nur optimieren, wenn der User den Haupt-Button klickt, nicht beim Verschieben
+    // Optimierung nur wenn gewünscht (Haupt-Button)
     if (autoOptimize && coords.length > 2) {
         let start = coords.shift();
         let end = coords.pop();
@@ -141,59 +117,91 @@ async function planRoute(autoOptimize = true) {
         routeToDraw = optimized;
     }
 
+    // OSRM API Call
     const osrmCoords = routeToDraw.map(c => `${c.latLng[1]},${c.latLng[0]}`).join(';');
     try {
         const rResp = await fetch(`https://router.project-osrm.org/route/v1/driving/${osrmCoords}?overview=full&geometries=geojson&steps=true`);
         const rData = await rResp.json();
         
         if (rData.code === 'Ok') {
-            // Alte Linien/Marker löschen
-            markers.forEach(m => map.removeLayer(m));
-            routeLines.forEach(l => map.removeLayer(l));
-            markers = []; routeLines = [];
-
-            const line = L.geoJSON(rData.routes[0].geometry, { style: { color: '#3498db', weight: 6, opacity: 0.8 } }).addTo(map);
-            routeLines.push(line);
-            
-            timeInfo.innerHTML = `<strong><i class='fas fa-clock'></i> Fahrzeit:</strong> ${formatTime(rData.routes[0].duration)}<br><strong><i class='fas fa-road'></i> Strecke:</strong> ${(rData.routes[0].distance / 1000).toFixed(1)} km`;
-            summary.style.display = "block";
-            
-            // Details Update
-            let detailsHtml = "";
-            const legs = rData.routes[0].legs;
-            routeToDraw.forEach((stop, index) => {
-                const iconClass = (index === 0) ? 'fa-house' : (index === routeToDraw.length-1 ? 'fa-flag-checkered' : 'fa-location-dot');
-                detailsHtml += `
-                    <div class="detail-step">
-                        <i class="fas ${iconClass} main-icon"></i>
-                        <span class="step-addr">${stop.name}</span>
-                        ${index < legs.length ? `<span class="step-info">${formatTime(legs[index].duration)} (${(legs[index].distance / 1000).toFixed(1)} km) bis nächster Stopp</span>` : ''}
-                    </div>`;
-            });
-            detailsCont.innerHTML = detailsHtml;
-
-            // Marker neu setzen
-            routeToDraw.forEach((c, i) => {
-                const icon = L.divIcon({ html: `<div class="marker-number">${i+1}</div>`, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
-                markers.push(L.marker(c.latLng, { icon: icon }).addTo(map).bindTooltip(c.name, { direction: 'right', className: 'map-label' }));
-            });
-            map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
+            updateMapAndUI(rData, routeToDraw);
         }
     } catch (e) { console.error(e); }
 
-    statusText.innerHTML = '<i class="fas fa-check-circle"></i> Tour aktualisiert!';
+    statusText.innerHTML = '<i class="fas fa-check-circle"></i> Tour bereit!';
     progBar.style.width = "100%";
     setTimeout(() => progBarCont.style.display = "none", 500);
 }
 
-// ... Restliche Funktionen (toggleDarkMode, formatTime, clearAll, toggleDetails) bleiben gleich wie vorher ...
+function updateMapAndUI(rData, routeToDraw) {
+    // Reset
+    markers.forEach(m => map.removeLayer(m));
+    routeLines.forEach(l => map.removeLayer(l));
+    markers = []; routeLines = [];
 
-function toggleDarkMode() {
-    const body = document.getElementById('body');
-    const btn = document.getElementById('dark-mode-toggle');
-    const isDark = body.classList.toggle('dark-mode');
-    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    // Route zeichnen
+    const line = L.geoJSON(rData.routes[0].geometry, { style: { color: '#3498db', weight: 6, opacity: 0.8 } }).addTo(map);
+    routeLines.push(line);
+
+    // Zeit & Strecke
+    document.getElementById('time-info').innerHTML = `<strong><i class='fas fa-clock'></i> Fahrzeit:</strong> ${formatTime(rData.routes[0].duration)}<br><strong><i class='fas fa-road'></i> Strecke:</strong> ${(rData.routes[0].distance / 1000).toFixed(1)} km`;
+    document.getElementById('route-summary').style.display = "block";
+
+    // Marker & Details generieren
+    let detailsHtml = "";
+    const legs = rData.routes[0].legs;
+    
+    routeToDraw.forEach((stop, index) => {
+        // Map Marker
+        const icon = L.divIcon({ html: `<div class="marker-number">${index+1}</div>`, className: '', iconSize: [26, 26], iconAnchor: [13, 13] });
+        markers.push(L.marker(stop.latLng, { icon: icon }).addTo(map).bindTooltip(stop.name, { direction: 'right', className: 'map-label' }));
+
+        // Details Panel
+        const iconClass = (index === 0) ? 'fa-house' : (index === routeToDraw.length-1 ? 'fa-flag-checkered' : 'fa-location-dot');
+        detailsHtml += `
+            <div class="detail-step">
+                <i class="fas ${iconClass} main-icon"></i>
+                <span class="step-addr">${stop.name}</span>
+                ${index < legs.length ? `<span class="step-info">${formatTime(legs[index].duration)} (${(legs[index].distance / 1000).toFixed(1)} km)</span>` : ''}
+            </div>`;
+    });
+    
+    document.getElementById('route-details').innerHTML = detailsHtml;
+    map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
+}
+
+// Hilfsfunktionen
+function addInputField() {
+    const currentFields = container.getElementsByClassName('input-group').length;
+    if (currentFields >= 20) return alert("Maximal 20 Adressen möglich.");
+    
+    const div = document.createElement('div');
+    div.className = 'input-group';
+    div.draggable = true;
+    div.innerHTML = `
+        <i class="fas fa-grip-vertical drag-handle"></i>
+        <i class="fas fa-location-dot"></i>
+        <input type="text" class="addr-input" placeholder="Adresse ${currentFields + 1}" oninput="this.classList.remove('input-error')">
+        ${currentFields > 1 ? `<button class="remove-btn" onclick="animateRemove(this)" title="Löschen"><i class="fas fa-circle-xmark"></i></button>` : '<div style="width:1.1rem"></div>'}
+    `;
+    setupDragAndDrop(div);
+    container.appendChild(div);
+}
+
+function updatePlaceholders() {
+    document.querySelectorAll('.addr-input').forEach((input, i) => {
+        input.placeholder = `Adresse ${i + 1}`;
+    });
+}
+
+function animateRemove(button) {
+    const row = button.parentElement;
+    row.classList.add('fall-die-away');
+    setTimeout(() => {
+        row.remove();
+        updatePlaceholders();
+        planRoute(false);
+    }, 500);
 }
 
 function formatTime(seconds) {
@@ -202,27 +210,28 @@ function formatTime(seconds) {
     return h > 0 ? `${h} Std. ${m} Min.` : `${m} Min.`;
 }
 
+function toggleDarkMode() {
+    const isDark = document.getElementById('body').classList.toggle('dark-mode');
+    document.getElementById('dark-mode-toggle').innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
 function toggleDetails() {
     const cont = document.getElementById('route-details');
-    const btn = document.getElementById('btn-details');
     const isHidden = cont.style.display === "none";
     cont.style.display = isHidden ? "block" : "none";
-    btn.innerHTML = isHidden ? '<i class="fas fa-chevron-up"></i> Details ausblenden' : '<i class="fas fa-chevron-down"></i> Details anzeigen';
+    document.getElementById('btn-details').innerHTML = isHidden ? '<i class="fas fa-chevron-up"></i> Details ausblenden' : '<i class="fas fa-chevron-down"></i> Details anzeigen';
 }
 
 function clearAll() {
-    const rows = Array.from(container.getElementsByClassName('input-group'));
-    rows.forEach((row, index) => { setTimeout(() => { row.classList.add('fall-down-out'); }, index * 50); });
-    setTimeout(() => {
-        container.innerHTML = "";
-        init();
-        markers.forEach(m => map.removeLayer(m));
-        routeLines.forEach(l => map.removeLayer(l));
-        markers = []; routeLines = [];
-        document.getElementById('status-text').innerText = "Bereit";
-        document.getElementById('route-summary').style.display = "none";
-        document.getElementById('route-details').style.display = "none";
-    }, 600);
+    container.innerHTML = "";
+    geoCache.clear(); // Cache leeren bei Neustart
+    init();
+    markers.forEach(m => map.removeLayer(m));
+    routeLines.forEach(l => map.removeLayer(l));
+    document.getElementById('route-summary').style.display = "none";
+    document.getElementById('route-details').style.display = "none";
+    document.getElementById('status-text').innerText = "Bereit";
 }
 
 init();
